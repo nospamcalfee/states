@@ -68,8 +68,15 @@
 /* if an error was detected, exit state machine with error */
 #define SM_RETURN_ERROR -1
 
+#ifndef READ_GLOBAL_TICKS
+/*
+ * For your project define READ_GLOBAL_TICKS to access a variable that is
+ * at least 16 bits long which is the number of ms elapsed.
+ * The macros assume it is incremented every SM_TICK_RATE times pre second.
+ */
 uint32_t getms(); /* system specific function to read timer */
 #define READ_GLOBAL_TICKS getms()
+#endif
 
 #define SM_START_TIMER(sm, delay_) \
     do {    (sm)->start_timer=READ_GLOBAL_TICKS; \
@@ -82,7 +89,10 @@ uint32_t getms(); /* system specific function to read timer */
 #define SM_IS_TIMER_DONE(sm) ((uint16_t)( \
     ((uint16_t)READ_GLOBAL_TICKS) - (sm)->start_timer) >= (sm)->delay)
 #define SM_SET_TABLE(sm, table) ((sm)->stateptrptr = table)
-/**
+/*
+* this useful construct returns a pointer to the structure containing the
+* statemachine structure. But it uses GCC extensions.
+*
 * container_of - cast a member of a structure out to the containing structure
 * From linux - uses two gcc extensions (not portable to vc8)
 *
@@ -90,11 +100,10 @@ uint32_t getms(); /* system specific function to read timer */
 * @type:the type of the container struct this is embedded in.
 * @member:the name of the member within the struct.
 *
-*/
 #define container_of(ptr, type, member) ({\
         const typeof( ((type *)0)->member ) *__mptr = (ptr);\
         (type *)( (char *)__mptr - offsetof(type,member) );})
-
+*/
 /**
  * cast_p_to_outer - cast a pointer to an outer, containing struct
  * @ptype:The type of pointer (ie member type)
