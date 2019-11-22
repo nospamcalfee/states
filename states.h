@@ -38,6 +38,12 @@
 /* convert to ticks from ms for oneshot.
  * Used to build state machine tables.
 */
+/* allow user to change timer size. this is h/w dependent */
+#ifndef SM_TIMER_SIZE
+/* must be no bigger than free running timer variable, small is less ms
+   resolution, big uses slightly more ram */
+#define SM_TIMER_SIZE uint16_t
+#endif
 /* defines ticks per second */
 #ifndef SM_TICK_RATE
 #define SM_TICK_RATE 1000L
@@ -74,7 +80,7 @@
  * at least 16 bits long which is the number of ms elapsed.
  * The macros assume it is incremented every SM_TICK_RATE times pre second.
  */
-uint32_t getms(); /* system specific function to read timer */
+SM_TIMER_SIZE getms(); /* system specific function to read timer */
 #define READ_GLOBAL_TICKS getms()
 #endif
 
@@ -86,8 +92,8 @@ uint32_t getms(); /* system specific function to read timer */
 #define SM_STOP_TIMER(x)
 
 /* do an unsigned modulo 16 bit subtract to get duration, compare to delay */
-#define SM_IS_TIMER_DONE(sm) ((uint16_t)( \
-    ((uint16_t)READ_GLOBAL_TICKS) - (sm)->start_timer) >= (sm)->delay)
+#define SM_IS_TIMER_DONE(sm) ((SM_TIMER_SIZE)( \
+    ((SM_TIMER_SIZE)READ_GLOBAL_TICKS) - (sm)->start_timer) >= (sm)->delay)
 #define SM_SET_TABLE(sm, table) ((sm)->stateptrptr = table)
 /*
 * this useful construct returns a pointer to the structure containing the
@@ -131,8 +137,8 @@ typedef int (*state_func)(struct state_machine *sm);
 
 struct state_machine {
     state_func  *stateptrptr;   /* ptr to a table of state_func pointers */
-    uint16_t    start_timer;    /* save timer when started */
-    uint16_t    delay;          /* set number of ticks to wait from now */
+    SM_TIMER_SIZE    start_timer;    /* save timer when started */
+    SM_TIMER_SIZE    delay;          /* set number of ticks to wait from now */
 };
 
 /*
