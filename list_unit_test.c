@@ -12,6 +12,10 @@
  * notice must not be changed or removed and no warranty is either
  * expressed or implied by its publication or distribution.
  **********************************************************************/
+
+/*
+ * gcc -I . -Wall -Wextra -g -o list_unit_test list_unit_test.c states.c getms.c cdll.c
+ */
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
