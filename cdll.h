@@ -16,19 +16,25 @@
 #define __CDLL_INFRA_H__
 
 /*
- * cdll circular double linked list infrastructure
- * linked list implementation,
- * can be used as a FIFO, FILO or ring buffer.
+ * cdll circular double linked list infrastructure linked list implementation,
+ * can be used as a FIFO, FILO or ring buffer. Every list has a listhead node
+ * that is not really in the list, and cannot be cast to whatever struct the
+ * list is contained in.
  */
 struct cdll {
     struct cdll *next;
     struct cdll *prev;
 };
+//note both iterators below use current ll ptr, it is a problem if node is
+//deleted and memory is changed see defs below. It is a case of using memory
+//that has been deleted, not always safe.
 #define cdll_for_each(pos, head) \
         for (pos = (head)->next; pos != (head); pos = pos->next)
 
 #define cdll_for_each_rev(pos, head) \
         for (pos = (head)->prev; pos != (head); pos = pos->prev)
+
+#define cdll_empty(head) ((head) == (head)->next)
 
 void cdll_init(struct cdll *listhead);
 /*
@@ -50,5 +56,23 @@ void cdll_insert_node_head(struct cdll *newnode, struct cdll *head);
  */
 void cdll_insert_node_tail(struct cdll *newnode, struct cdll *head);
 void cdll_delete_node(struct cdll *list);
+//kind of tricky, but useful for sorts
+void cdll_swap_nodes(struct cdll *i, struct cdll *j);
+
+/**
+ * cast_p_to_outer - cast a pointer to an outer, containing struct
+ * @ptype:The type of pointer (ie member type)
+ * @ptr:The pointer to the member
+ * @mtype:The type of the outer, container
+ * @mname:The name of the member in outer struct (ptr is pointing at it)
+ *
+ * This uses a portable (no GNU extension) method of casting
+ * All types are checked. Trust the C optimizer
+ */
+#define cast_p_to_outer(ptype, ptr, mtype, mname) (\
+    ((ptype) ptr == ptr) ? \
+    (mtype *)( (char *)ptr - offsetof(mtype, mname) ) \
+    : NULL \
+)
 
 #endif //__CDLL_INFRA_H__
